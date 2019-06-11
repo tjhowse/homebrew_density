@@ -24,13 +24,11 @@ def get_reading(t,i):
     t.value(0)
     # Wait for the interrupts to set these globals.
     while START == 0 or END == 0:
-        # Jump the else if we get a timeout.
+        # Throw and exception if we get a timeout.
         if ticks_diff(ticks_us(), trigger_time) > response_timeout_us:
-            break
+            raise ValueError("Timeout from ultrasonic")
         sleep_us(10)
-    else:
-        return ticks_diff(END,START)
-    raise ValueError("Timeout from ultrasonic")
+    return ticks_diff(END,START)
 
 def get_avg_reading(t,i,n):
     avg = 0
