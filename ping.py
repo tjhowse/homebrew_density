@@ -13,14 +13,24 @@ def callback(p):
 
 def get_reading(t,i):
     global START,END
+    # 8ms is about 3m round trip. A 50ms timeout is reasonable.
+    response_timeout_us = 50000
     START = 0
     END = 0
+    # Send a 10us pulse on the trigger pin
     t.value(1)
+    trigger_time = ticks_us()
     sleep_us(10)
     t.value(0)
+    # Wait for the interrupts to set these globals.
     while START == 0 or END == 0:
+        # Jump the else if we get a timeout.
+        if ticks_diff(ticks_us(), trigger_time) > response_timeout_us:
+            break
         sleep_us(10)
-    return ticks_diff(END,START)
+    else:
+        return ticks_diff(END,START)
+    raise ValueError("Timeout from ultrasonic")
 
 def get_avg_reading(t,i,n):
     avg = 0
@@ -31,12 +41,16 @@ def get_avg_reading(t,i,n):
 
 def go():
     avg_samples = 10;
-
     freq(160000000);
+    # Trigger pin
     t = Pin(13, Pin.OUT)
+    # Input pin
     i = Pin(12, Pin.IN)
     i.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=callback)
     while True:
-        print(get_avg_reading(t,i,avg_samples))
+        try:
+            print(get_avg_reading(t,i,avg_samples))
+        except ValueError as e:
+            print("Failed to get reading: {}".format(e))
         sleep_us(100000)
 
