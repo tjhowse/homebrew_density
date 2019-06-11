@@ -21,3 +21,6 @@ calculations.
 We aren't too concerned with absolute accuracy of the density measurement,
 since we're primarily interested in the density delta. Once the density stops
 changing, the fermentation is complete and the beer can be bottled.
+
+This code is written to run on an ESP8266 and publish results to a local
+MQTT broker.
