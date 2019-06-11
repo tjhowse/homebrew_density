@@ -34,13 +34,18 @@ def get_reading(t,i):
 
 def get_avg_reading(t,i,n):
     avg = 0
+    n_success = n
     for _ in range(n):
-        avg += get_reading(t,i)
-        sleep_us(1000)
-    return int(avg / n)
+        try:
+            avg += get_reading(t,i)
+        except ValueError as e:
+            print("Failed to get reading: {}".format(e))
+            n_success -= 1
+        sleep_us(5000)
+    return int(avg / n_success)
 
 def go():
-    avg_samples = 10;
+    avg_samples = 250;
     freq(160000000);
     # Trigger pin
     t = Pin(13, Pin.OUT)
@@ -63,6 +68,7 @@ def go():
             reading = 0
             try:
                 reading = get_avg_reading(t,i,avg_samples)
+                print("Reading: {}".format(reading))
             except ValueError as e:
                 print("Failed to get reading: {}".format(e))
             if c != None and reading != 0:
