@@ -22,16 +22,12 @@ def get_reading(t,i):
         sleep_us(10)
     return ticks_diff(END,START)
 
-    print("Duration: {}".format(END-START))
-
 def get_avg_reading(t,i,n):
     avg = 0
     for _ in range(n):
         avg += get_reading(t,i)
         sleep_us(1000)
     return int(avg / n)
-
-
 
 def go():
     avg_samples = 10;
