@@ -1,3 +1,5 @@
 mqtt_host = "192.168.1.1"
-mqtt_username = "username"
+mqtt_username = "name"
 mqtt_password = "password"
+wifi_ssid = "ssid"
+wifi_psk = "psk"

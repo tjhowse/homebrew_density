@@ -1,5 +1,7 @@
 from machine import Pin,freq
-from utime import sleep_us, ticks_us, ticks_cpu,ticks_diff
+from umqtt.simple import MQTTClient
+from utime import sleep_us,ticks_us,ticks_ms,ticks_cpu,ticks_diff
+import secrets
 
 START = 0
 END = 0
@@ -45,10 +47,35 @@ def go():
     # Input pin
     i = Pin(12, Pin.IN)
     i.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=callback)
+    DENSITY_TOPIC = "6hull/homebrew/ultrasonic"
+    REPORT_TIME_MS = 0
+    REPORT_INTERVAL_MS = 200
+    c = None
     while True:
-        try:
-            print(get_avg_reading(t,i,avg_samples))
-        except ValueError as e:
-            print("Failed to get reading: {}".format(e))
-        sleep_us(100000)
+        if c == None:
+            try:
+                c = mqtt_connect()
+                print("Successfully connected to broker")
+            except Exception as e :
+                print("Couldn't connect to broker. Try again later: {}".format(e))
+                c = None
+        if ticks_diff(ticks_ms(), REPORT_TIME_MS) > REPORT_INTERVAL_MS:
+            reading = 0
+            try:
+                reading = get_avg_reading(t,i,avg_samples)
+            except ValueError as e:
+                print("Failed to get reading: {}".format(e))
+            if c != None and reading != 0:
+                try:
+                    c.publish(DENSITY_TOPIC, b'{}'.format(reading))
+                except Exception as e :
+                    print("Failed to publish to broker. Try again later: {}".format(e))
+                    c = None
+            REPORT_TIME_MS = ticks_ms()
+        sleep_us(10000)
 
+def mqtt_connect():
+    print("Attempting connection to MQTT broker")
+    c = MQTTClient("homebrew", secrets.mqtt_host, 1883, secrets.mqtt_username, secrets.mqtt_password, 0, ssl=False)
+    c.connect(clean_session=True)
+    return c
